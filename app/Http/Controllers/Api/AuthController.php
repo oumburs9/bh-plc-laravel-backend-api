@@ -41,9 +41,16 @@ class AuthController extends Controller
                 'permissions' => $user->getPermissionNames(),
             ]
         ])->cookie(
-            'refresh_token', $refreshToken, 60 * 24 * 7, // 7 days
-            '/', null, true, true // path, domain, secure, httpOnly
-        );
+                'refresh_token',
+                $refreshToken,
+                60 * 24 * 7,   // 7 days
+                '/',
+                '.byo-technology.com', // 👈 explicit domain
+                true,   // Secure = true
+                true,   // HttpOnly
+                false,  // Raw
+                'None'  // 👈 SameSite=None (required for cross-site)
+            );
     }
 
     public function refresh(Request $request)
