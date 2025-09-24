@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Carbon\Carbon;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -60,15 +61,22 @@ class AuthController extends Controller
             return response()->json(['message' => 'No refresh token'], 401);
         }
 
-        $user = Auth::guard('sanctum')->user();
-        if (!$user) {
+        // Decode the refresh token into ID + token
+        $tokenModel = PersonalAccessToken::findToken($refreshToken);
+        if (!$tokenModel) {
             return response()->json(['message' => 'Invalid refresh token'], 401);
         }
 
+        $user = $tokenModel->tokenable; // the user who owns this token
+        if (!$user) {
+            return response()->json(['message' => 'Invalid refresh token user'], 401);
+        }
+
+        // Issue a new access token
         $accessToken = $user->createToken('access-token', ['*'], now()->addMinutes(15))->plainTextToken;
 
         return response()->json([
-            'access_token' => $accessToken
+            'access_token' => $accessToken,
         ]);
     }
 
